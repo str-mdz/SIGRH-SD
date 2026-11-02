@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+{% block title %}Revisar solicitudes | SIGRH{% endblock %}
+{% block heading %}Revisar solicitudes{% endblock %}
+{% block content %}
+<section class="panel">
+    <h2>Pendientes de respuesta</h2>
+    <div class="table-wrap"><table>
+        <thead><tr><th>Empleado</th><th>Periodo</th><th>Días</th><th>Acción</th></tr></thead>
+        <tbody>{% for solicitud in solicitudes %}<tr>
+            <td>{{ solicitud.empleado }}</td>
+            <td>{{ solicitud.fecha_inicio|date:"d/m/Y" }} – {{ solicitud.fecha_fin|date:"d/m/Y" }}</td>
+            <td>{{ solicitud.dias }}</td>
+            <td><a class="button" href="{% url 'detalle_revision' solicitud.pk %}">Revisar</a></td>
+        </tr>{% empty %}<tr><td colspan="4" class="empty">No hay solicitudes pendientes de otras personas.</td></tr>{% endfor %}</tbody>
+    </table></div>
+</section>
+{% endblock %}

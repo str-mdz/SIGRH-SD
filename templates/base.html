@@ -1,0 +1,37 @@
+{% load static %}
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}SIGRH{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'estilos.css' %}">
+</head>
+<body>
+<div class="layout">
+    <aside class="sidebar">
+        <a class="logo" href="{% url 'dashboard' %}">SIGRH</a>
+        <p class="muted">Gestión de vacaciones</p>
+        <nav aria-label="Menú principal">
+            <a href="{% url 'dashboard' %}">Inicio</a>
+            <a href="{% url 'solicitar_vacaciones' %}">Solicitar vacaciones</a>
+            <a href="{% url 'ver_estatus_vacaciones' %}">Mis solicitudes</a>
+            {% if user.is_staff %}<a href="{% url 'revisar_solicitudes' %}">Revisar solicitudes</a>{% endif %}
+            {% if user.is_superuser %}<a href="{% url 'admin:usuarios_usuario_changelist' %}">Administrar empleados</a>{% endif %}
+            <a href="{% url 'politicas' %}">Reglas de vacaciones</a>
+        </nav>
+        <form method="post" action="{% url 'logout' %}">{% csrf_token %}<button class="secondary" type="submit">Salir</button></form>
+    </aside>
+    <main>
+        <header class="header">
+            <div><h1>{% block heading %}Vacaciones{% endblock %}</h1><p>Un espacio sencillo para organizar tus días.</p></div>
+            <div>{{ user.get_full_name|default:user.username }}<br><small>{% if user.is_staff %}Administrador{% else %}Empleado{% endif %}</small></div>
+        </header>
+        <div class="content">
+            {% for message in messages %}<div class="message {{ message.tags }}" role="status">{{ message }}</div>{% endfor %}
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+</div>
+</body>
+</html>

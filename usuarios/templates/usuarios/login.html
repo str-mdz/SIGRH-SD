@@ -1,0 +1,25 @@
+{% load static %}
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Iniciar sesión | SIGRH</title>
+    <link rel="stylesheet" href="{% static 'estilos.css' %}">
+</head>
+<body class="login-page">
+    <main class="login-box">
+        <p class="brand">SIGRH</p>
+        <h1>Iniciar sesión</h1>
+        <p>Gestiona tus solicitudes de vacaciones.</p>
+        {% for message in messages %}<div class="message error" role="alert">{{ message }}</div>{% endfor %}
+        <form method="post">
+            {% csrf_token %}
+            <p><label for="empleado">Identificador de empleado</label><input id="empleado" name="id_empleado" autocomplete="username" maxlength="150" required autofocus></p>
+            <p><label for="clave">Contraseña</label><input id="clave" type="password" name="contrasenia" autocomplete="current-password" required></p>
+            <button type="submit">Entrar</button>
+        </form>
+        <p><small>Tu administrador te proporciona el acceso.</small></p>
+    </main>
+</body>
+</html>

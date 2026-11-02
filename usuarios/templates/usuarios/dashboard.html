@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% block title %}Inicio | SIGRH{% endblock %}
+{% block heading %}Bienvenido a SIGRH{% endblock %}
+{% block content %}
+<section class="stats" aria-label="Saldo de vacaciones del año actual">
+    <div class="card highlight"><span>Días disponibles</span><strong>{{ saldo.disponibles }}</strong></div>
+    <div class="card"><span>Días aprobados</span><strong>{{ saldo.usados }}</strong></div>
+    <div class="card"><span>Días pendientes</span><strong>{{ saldo.pendientes }}</strong></div>
+    <div class="card"><span>Cupo anual</span><strong>{{ saldo.total }}</strong></div>
+</section>
+<div class="actions"><a class="button" href="{% url 'solicitar_vacaciones' %}">Solicitar vacaciones</a><a class="button secondary" href="{% url 'ver_estatus_vacaciones' %}">Ver mis solicitudes</a></div>
+<section class="panel">
+    <h2>Últimas solicitudes</h2>
+    {% include 'vacaciones/tabla.html' %}
+</section>
+{% endblock %}

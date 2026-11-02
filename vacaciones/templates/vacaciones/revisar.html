@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% block title %}Revisión | SIGRH{% endblock %}
+{% block heading %}Revisar solicitud{% endblock %}
+{% block content %}
+<section class="panel form-panel">
+    <h2>{{ solicitud.empleado }}</h2>
+    <p>{{ solicitud.fecha_inicio|date:"d/m/Y" }} – {{ solicitud.fecha_fin|date:"d/m/Y" }} · {{ solicitud.dias }} días</p>
+    <p><strong>Motivo:</strong> {{ solicitud.motivo|default:"Sin motivo indicado." }}</p>
+    {% if solicitud.estado == 'P' %}
+        <form method="post">{% csrf_token %}{{ form.as_p }}<button type="submit">Guardar decisión</button></form>
+    {% else %}<p>Esta solicitud está {{ solicitud.get_estado_display|lower }}.</p>{% endif %}
+    <p><a href="{% url 'revisar_solicitudes' %}">Volver a pendientes</a></p>
+</section>
+{% endblock %}

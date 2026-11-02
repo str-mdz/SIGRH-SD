@@ -1,0 +1,13 @@
+# Entornos y archivos generados localmente.
+venv/
+.venv/
+__pycache__/
+*.py[cod]
+*.sqlite3
+*.sqlite3-*
+.env
+media/
+staticfiles/
+.pytest_cache/
+.vscode/
+.idea/

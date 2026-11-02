@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+{% block title %}Solicitar vacaciones | SIGRH{% endblock %}
+{% block heading %}Solicitar vacaciones{% endblock %}
+{% block content %}
+<section class="panel form-panel">
+    <h2>Tienes {{ saldo.disponibles }} días disponibles</h2>
+    <p class="muted">Elige un periodo del año actual. Se cuentan los días de lunes a viernes.</p>
+    <form method="post">{% csrf_token %}{{ form.as_p }}<button type="submit">Enviar solicitud</button></form>
+</section>
+{% endblock %}

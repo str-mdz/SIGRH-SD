@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+{% block title %}Reglas | SIGRH{% endblock %}
+{% block heading %}Reglas de vacaciones{% endblock %}
+{% block content %}
+<section class="panel prose">
+    <h2>Así funcionan las solicitudes ;)</h2>
+    <ul>
+        <li>Tu administrador asigna tu cupo de días por año calendario. El valor inicial es 12 días conforme la ley.</li>
+        <li>Puedes pedir fechas desde hoy hasta el 31 de diciembre del año actual.</li>
+        <li>Se cuentan lunes a viernes, incluyendo las fechas de inicio y fin. No se descuentan festivos.</li>
+        <li>Las solicitudes rechazadas o canceladas liberan los días reservados.</li>
+        <li>No puedes pedir fechas que se crucen con una solicitud pendiente o aprobada.</li>
+        <li>Puedes cancelar una solicitud únicamente mientras esté pendiente.</li>
+        <li>Un administrador aprueba o rechaza cada solicitud. No puede revisar la suya.</li>
+        <li>El cupo se vuelve a calcular cada año, sin acumular días de años anteriores.</li>
+    </ul>
+    <p class="muted">El cupo es una asignación manual de la empresa. Esta versión aún no calcula prestaciones por antigüedad.</p>
+</section>
+{% endblock %}
