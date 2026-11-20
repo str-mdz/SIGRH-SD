@@ -6,13 +6,13 @@ from django.utils import timezone
 from .models import Solicitud
 
 
+# Cuenta lunes a viernes, ambas fechas están incluidas
 def contar_dias(inicio, fin):
-    # Cuenta lunes a viernes, ambas fechas están incluidas
     return sum((inicio + timedelta(days=i)).weekday() < 5 for i in range((fin - inicio).days + 1))
 
 
+# Resta del cupo anual los días aprobados y los pendientes
 def resumen_dias(empleado):
-    # Resta del cupo anual los días aprobados y los pendientes
     solicitudes = Solicitud.objects.filter(empleado=empleado, fecha_inicio__year=timezone.localdate().year)
     usados = solicitudes.filter(estado="A").aggregate(total=Sum("dias"))["total"] or 0
     pendientes = solicitudes.filter(estado="P").aggregate(total=Sum("dias"))["total"] or 0
@@ -24,9 +24,9 @@ def resumen_dias(empleado):
     }
 
 
+# Valida fechas, cruces y saldo antes de guardar una solicitud pendiente
 @transaction.atomic
 def crear_solicitud(empleado, fecha_inicio, fecha_fin, motivo=""):
-    # Valida fechas, cruces y saldo antes de guardar una solicitud pendiente
     hoy = timezone.localdate()
     if fecha_inicio < hoy or fecha_fin < fecha_inicio:
         raise ValidationError("Elige fechas desde hoy y una fecha final igual o posterior al inicio.")
@@ -35,6 +35,7 @@ def crear_solicitud(empleado, fecha_inicio, fecha_fin, motivo=""):
     dias = contar_dias(fecha_inicio, fecha_fin)
     if not dias:
         raise ValidationError("El periodo debe incluir al menos un día de lunes a viernes.")
+    # Evita reservar fechas que ya están pendientes o aprobadas
     if Solicitud.objects.filter(
         empleado=empleado, estado__in=["P", "A"],
         fecha_inicio__lte=fecha_fin, fecha_fin__gte=fecha_inicio,

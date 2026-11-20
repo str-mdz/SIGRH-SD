@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+{% block title %}Registrar nómina | SIGRH{% endblock %}
+{% block heading %}Registrar nómina{% endblock %}
+{% block content %}
+<section class="panel form-panel">
+    <p class="muted">El total se calcula al guardar: sueldo base + bono − descuento.</p>
+    <form method="post">{% csrf_token %}{{ form.as_p }}<button type="submit">Registrar nómina</button></form>
+    <p><a href="{% url 'nomina:historial' %}">Volver al historial</a></p>
+</section>
+{% endblock %}

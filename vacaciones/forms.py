@@ -2,7 +2,9 @@ from django import forms
 from .models import Solicitud
 
 
+# Recoge las fechas y el motivo de una solicitud de vacaciones
 class SolicitudForm(forms.ModelForm):
+    # Define los campos y controles que usa el formulario de vacaciones
     class Meta:
         model = Solicitud
         fields = ["fecha_inicio", "fecha_fin", "motivo"]
@@ -14,6 +16,7 @@ class SolicitudForm(forms.ModelForm):
         }
 
 
+# Recoge la decisión del administrador y su comentario
 class RevisionForm(forms.Form):
     decision = forms.ChoiceField(choices=[("A", "Aprobar"), ("R", "Rechazar")], label="Decisión")
     observaciones = forms.CharField(required=False, max_length=500, label="Comentario (opcional)", widget=forms.Textarea(attrs={"rows": 3}))

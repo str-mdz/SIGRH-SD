@@ -1,6 +1,7 @@
 from django.urls import path
 from . import views
 
+# Conecta las pantallas para solicitar, consultar, cancelar y revisar vacaciones
 urlpatterns = [
     path("solicitar/", views.solicitar_vacaciones, name="solicitar_vacaciones"),
     path("estatus/", views.ver_estatus, name="ver_estatus_vacaciones"),

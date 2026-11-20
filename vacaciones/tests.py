@@ -7,10 +7,11 @@ from .models import Solicitud
 from .services import resumen_dias
 
 
+# Comprueba las solicitudes, el saldo y los permisos de vacaciones
 @override_settings(PASSWORD_HASHERS=["django.contrib.auth.hashers.MD5PasswordHasher"])
 class FlujoVacacionesTests(TestCase):
+    # Prepara dos empleados, un administrador y una fecha fija
     def setUp(self):
-        # Prepara dos empleados, un administrador y una fecha fija
         reloj = patch("django.utils.timezone.localdate", return_value=date(2026, 6, 1))
         reloj.start()
         self.addCleanup(reloj.stop)
@@ -20,12 +21,12 @@ class FlujoVacacionesTests(TestCase):
         self.client.force_login(self.empleado)
         self.datos = {"fecha_inicio": "2026-06-08", "fecha_fin": "2026-06-12", "motivo": "Descanso"}
 
+    # Envía el formulario con fechas válidas salvo las indicadas
     def solicitar(self, **cambios):
-        # Envía el formulario con fechas válidas salvo las indicadas
         return self.client.post(reverse("solicitar_vacaciones"), self.datos | cambios)
 
+    # Comprueba el recorrido completo y la reserva correcta de cinco días
     def test_solicitar_aprobar_y_consultar(self):
-        # Comprueba el recorrido completo y la reserva correcta de cinco días
         self.assertRedirects(self.solicitar(), reverse("ver_estatus_vacaciones"))
         solicitud = Solicitud.objects.get()
         self.assertEqual(solicitud.dias, 5)
@@ -41,16 +42,16 @@ class FlujoVacacionesTests(TestCase):
         self.client.force_login(self.empleado)
         self.assertContains(self.client.get(reverse("ver_estatus_vacaciones")), "Autorizado")
 
+    # El rechazo devuelve los días reservados al empleado
     def test_rechazar_libera_saldo(self):
-        # El rechazo devuelve los días reservados al empleado
         self.solicitar()
         solicitud = Solicitud.objects.get()
         self.client.force_login(self.admin)
         self.client.post(reverse("detalle_revision", args=[solicitud.pk]), {"decision": "R"})
         self.assertEqual(resumen_dias(self.empleado)["disponibles"], 12)
 
+    # Cancelar una pendiente libera el saldo y registra su fecha final
     def test_cancelar_libera_saldo(self):
-        # Cancelar una pendiente libera el saldo y registra su fecha final
         self.solicitar()
         solicitud = Solicitud.objects.get()
         self.assertRedirects(self.client.post(reverse("cancelar_solicitud", args=[solicitud.pk])), reverse("ver_estatus_vacaciones"))
@@ -59,8 +60,8 @@ class FlujoVacacionesTests(TestCase):
         self.assertIsNotNone(solicitud.fecha_respuesta)
         self.assertEqual(resumen_dias(self.empleado)["disponibles"], 12)
 
+    # Rechaza fechas pasadas, invertidas, incompletas, futuras y sin días hábiles
     def test_fechas_invalidas(self):
-        # Rechaza fechas pasadas, invertidas, incompletas, futuras y sin días hábiles
         casos = [
             ("2026-05-29", "2026-06-01"), ("2026-06-12", "2026-06-08"),
             ("2027-01-04", "2027-01-05"), ("2026-12-31", "2027-01-01"),
@@ -74,36 +75,36 @@ class FlujoVacacionesTests(TestCase):
                 self.assertTrue(respuesta.context["form"].errors)
         self.assertFalse(Solicitud.objects.exists())
 
+    # Una solicitud que supera el cupo no se guarda
     def test_no_exceder_cupo(self):
-        # Una solicitud que supera el cupo no se guarda
         respuesta = self.solicitar(fecha_fin="2026-06-30")
         self.assertContains(respuesta, "No tienes suficientes días")
         self.assertFalse(Solicitud.objects.exists())
 
+    # Las pendientes también impiden reservar más días que el cupo
     def test_reservas_cuentan_para_solicitudes_nuevas(self):
-        # Las pendientes también impiden reservar más días que el cupo
         self.solicitar()
         respuesta = self.solicitar(fecha_inicio="2026-06-15", fecha_fin="2026-06-24")
         self.assertContains(respuesta, "No tienes suficientes días")
         self.assertEqual(Solicitud.objects.count(), 1)
 
+    # Impide solapar tanto solicitudes pendientes como aprobadas
     def test_no_cruzar_solicitudes(self):
-        # Impide solapar tanto solicitudes pendientes como aprobadas
         self.solicitar()
         for estado in ["P", "A"]:
             Solicitud.objects.update(estado=estado)
             self.assertContains(self.solicitar(), "Las fechas coinciden")
         self.assertEqual(Solicitud.objects.count(), 1)
 
+    # Permite volver a pedir un periodo rechazado
     def test_solicitar_despues_de_rechazo(self):
-        # Permite volver a pedir un periodo rechazado
         self.solicitar()
         Solicitud.objects.update(estado="R")
         self.assertEqual(self.solicitar().status_code, 302)
         self.assertEqual(Solicitud.objects.count(), 2)
 
+    # Un empleado no ve ni cancela solicitudes ajenas ni puede aprobarlas
     def test_privacidad_y_permisos(self):
-        # Un empleado no ve ni cancela solicitudes ajenas ni puede aprobarlas
         self.solicitar()
         solicitud = Solicitud.objects.get()
         self.client.force_login(self.otro)
@@ -112,15 +113,15 @@ class FlujoVacacionesTests(TestCase):
         self.assertEqual(self.client.get(reverse("revisar_solicitudes")).status_code, 403)
         self.assertEqual(self.client.post(reverse("detalle_revision", args=[solicitud.pk]), {"decision": "A"}).status_code, 403)
 
+    # El administrador necesita que otra persona revise sus vacaciones
     def test_admin_no_aprueba_solicitud_propia(self):
-        # El administrador necesita que otra persona revise sus vacaciones
         self.client.force_login(self.admin)
         self.solicitar()
         solicitud = Solicitud.objects.get()
         self.assertEqual(self.client.post(reverse("detalle_revision", args=[solicitud.pk]), {"decision": "A"}).status_code, 403)
 
+    # Una segunda decisión o una cancelación tardía no cambia el resultado
     def test_no_repetir_decision_ni_cancelar_aprobada(self):
-        # Una segunda decisión o una cancelación tardía no cambia el resultado
         self.solicitar()
         solicitud = Solicitud.objects.get()
         self.client.force_login(self.admin)
@@ -132,8 +133,8 @@ class FlujoVacacionesTests(TestCase):
         solicitud.refresh_from_db()
         self.assertEqual(solicitud.estado, "A")
 
+    # Solo se aceptan aprobar y rechazar en el formulario de revisión
     def test_decision_invalida(self):
-        # Solo se aceptan aprobar y rechazar en el formulario de revisión
         self.solicitar()
         solicitud = Solicitud.objects.get()
         self.client.force_login(self.admin)
@@ -142,8 +143,8 @@ class FlujoVacacionesTests(TestCase):
         solicitud.refresh_from_db()
         self.assertEqual(solicitud.estado, "P")
 
+    # Abrir una URL no cancela vacaciones ni cierra sesiones
     def test_get_no_modifica_datos(self):
-        # Abrir una URL no cancela vacaciones ni cierra sesiones
         self.solicitar()
         solicitud = Solicitud.objects.get()
         self.assertEqual(self.client.get(reverse("cancelar_solicitud", args=[solicitud.pk])).status_code, 405)
@@ -153,20 +154,20 @@ class FlujoVacacionesTests(TestCase):
         solicitud.refresh_from_db()
         self.assertEqual(solicitud.estado, "P")
 
+    # Las solicitudes de escritura requieren el token del formulario
     def test_csrf_obligatorio(self):
-        # Las solicitudes de escritura requieren el token del formulario
         navegador = Client(enforce_csrf_checks=True)
         navegador.force_login(self.empleado)
         self.assertEqual(navegador.post(reverse("solicitar_vacaciones"), self.datos).status_code, 403)
 
+    # El historial anterior no consume el cupo del nuevo año
     def test_saldo_nuevo_anio(self):
-        # El historial anterior no consume el cupo del nuevo año
         self.solicitar()
         with patch("django.utils.timezone.localdate", return_value=date(2027, 1, 1)):
             self.assertEqual(resumen_dias(self.empleado)["disponibles"], 12)
 
+    # Las pantallas principales se renderizan sin errores de plantilla
     def test_paginas_principales(self):
-        # Las pantallas principales se renderizan sin errores de plantilla
         for nombre in ["dashboard", "solicitar_vacaciones", "ver_estatus_vacaciones", "politicas"]:
             self.assertEqual(self.client.get(reverse(nombre)).status_code, 200)
         self.client.force_login(self.admin)

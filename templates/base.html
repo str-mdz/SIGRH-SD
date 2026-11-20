@@ -19,6 +19,8 @@
             {% if user.is_staff %}<a href="{% url 'revisar_solicitudes' %}">Revisar solicitudes</a>{% endif %}
             {% if user.is_superuser %}<a href="{% url 'admin:usuarios_usuario_changelist' %}">Administrar empleados</a>{% endif %}
             <a href="{% url 'politicas' %}">Reglas de vacaciones</a>
+            {% if user.is_staff %}<a href="{% url 'reclutamiento:inicio' %}">Reclutamiento</a>{% endif %}
+            <a href="{% url 'nomina:historial' %}">Nómina</a>
         </nav>
         <form method="post" action="{% url 'logout' %}">{% csrf_token %}<button class="secondary" type="submit">Salir</button></form>
     </aside>

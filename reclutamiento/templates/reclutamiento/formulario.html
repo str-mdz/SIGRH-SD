@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+{% block title %}{{ titulo }} | SIGRH{% endblock %}
+{% block heading %}{{ titulo }}{% endblock %}
+{% block content %}
+<section class="panel form-panel">
+    {% if candidato %}<h2>{{ candidato.nombre }}</h2><p>{{ candidato.correo }} · {{ candidato.vacante.titulo }}</p>{% endif %}
+    <form method="post">{% csrf_token %}{{ form.as_p }}<button type="submit">Guardar</button></form>
+    <p><a href="{% url 'reclutamiento:inicio' %}">Volver a Reclutamiento</a></p>
+</section>
+{% endblock %}

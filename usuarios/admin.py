@@ -3,6 +3,7 @@ from django.contrib.auth.admin import UserAdmin
 from .models import Usuario
 
 
+# Organiza el alta y la edición de empleados en el administrador
 @admin.register(Usuario)
 class UsuarioAdmin(UserAdmin):
     fieldsets = (

@@ -12,8 +12,11 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    # Aplicaciones que forman los cuatro módulos de SIGRH
     'usuarios',
     'vacaciones',
+    'reclutamiento',
+    'nomina',
 ]
 
 MIDDLEWARE = [
@@ -29,6 +32,7 @@ MIDDLEWARE = [
 ROOT_URLCONF = 'SIGRH.urls'
 TEMPLATES = [{
     'BACKEND': 'django.template.backends.django.DjangoTemplates',
+    # Busca el diseño compartido del panel en la carpeta templates
     'DIRS': [BASE_DIR / 'templates'],
     'APP_DIRS': True,
     'OPTIONS': {'context_processors': [
@@ -39,23 +43,28 @@ TEMPLATES = [{
 }]
 WSGI_APPLICATION = 'SIGRH.wsgi.application'
 
+# Guarda los datos de SIGRH en el archivo local de SQLite
 DATABASES = {'default': {
     'ENGINE': 'django.db.backends.sqlite3',
     'NAME': BASE_DIR / 'db.sqlite3',
 }}
 
+# Usa el usuario de SIGRH con su cupo anual de vacaciones
 AUTH_USER_MODEL = 'usuarios.Usuario'
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
     {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
 ]
+# Muestra el sistema en español y usa la zona horaria de Ciudad de México
 LANGUAGE_CODE = 'es-mx'
 TIME_ZONE = 'America/Mexico_City'
 USE_I18N = True
 USE_TZ = True
 STATIC_URL = 'static/'
+# Carga los estilos compartidos desde la carpeta static
 STATICFILES_DIRS = [BASE_DIR / 'static']
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+# Define las pantallas de acceso y salida de SIGRH
 LOGIN_URL = '/usuarios/login/'
 LOGIN_REDIRECT_URL = '/usuarios/dashboard/'
 LOGOUT_REDIRECT_URL = '/usuarios/login/'

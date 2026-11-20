@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% block title %}Reclutamiento | SIGRH{% endblock %}
+{% block heading %}Reclutamiento{% endblock %}
+{% block content %}
+<div class="actions">
+    <a class="button" href="{% url 'reclutamiento:registrar_vacante' %}">Registrar vacante</a>
+    <a class="button secondary" href="{% url 'reclutamiento:registrar_candidato' %}">Registrar candidato</a>
+</div>
+<section class="panel">
+    <h2>Vacantes</h2>
+    <div class="table-wrap"><table>
+        <thead><tr><th>Título</th><th>Descripción</th><th>Estado</th><th>Acción</th></tr></thead>
+        <tbody>{% for vacante in vacantes %}<tr>
+            <td>{{ vacante.titulo }}</td><td>{{ vacante.descripcion|linebreaksbr }}</td>
+            <td>{{ vacante.get_estado_display }}</td>
+            <td><a href="{% url 'reclutamiento:editar_vacante' vacante.pk %}">Editar</a></td>
+        </tr>{% empty %}<tr><td colspan="4" class="empty">Todavía no hay vacantes registradas.</td></tr>{% endfor %}</tbody>
+    </table></div>
+</section>
+<div class="actions"><h2>Candidatos</h2></div>
+<section class="panel">
+    <div class="table-wrap"><table>
+        <thead><tr><th>Nombre</th><th>Correo</th><th>Vacante</th><th>Estado</th><th>Acción</th></tr></thead>
+        <tbody>{% for candidato in candidatos %}<tr>
+            <td>{{ candidato.nombre }}</td><td>{{ candidato.correo }}</td><td>{{ candidato.vacante.titulo }}</td>
+            <td><span class="status {{ candidato.estado }}">{{ candidato.get_estado_display }}</span></td>
+            <td><a href="{% url 'reclutamiento:estado_candidato' candidato.pk %}">Cambiar estado</a></td>
+        </tr>{% empty %}<tr><td colspan="5" class="empty">Todavía no hay candidatos registrados.</td></tr>{% endfor %}</tbody>
+    </table></div>
+</section>
+{% endblock %}

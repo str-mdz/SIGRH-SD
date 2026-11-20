@@ -2,8 +2,8 @@ from django.conf import settings
 from django.db import models
 
 
+# Guarda las fechas de vacaciones y una sola decisión del administrador
 class Solicitud(models.Model):
-    # Guarda las fechas de vacaciones y una sola decisión del administrador
 
     ESTADOS = [("P", "Pendiente"), ("A", "Aprobada"), ("R", "Rechazada"), ("C", "Cancelada")]
     empleado = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="solicitudes")
@@ -17,11 +17,12 @@ class Solicitud(models.Model):
     observaciones = models.CharField(max_length=500, blank=True)
     fecha_respuesta = models.DateTimeField(null=True, blank=True)
 
+    # Muestra primero las solicitudes más recientes y define su nombre en el administrador
     class Meta:
         ordering = ["-fecha_solicitud"]
         verbose_name = "Solicitud"
         verbose_name_plural = "Solicitudes"
 
+    # Identifica la solicitud en el panel de administración
     def __str__(self):
-        # Identifica la solicitud en el panel de administración
         return f"{self.empleado} · {self.fecha_inicio} · {self.get_estado_display()}"
