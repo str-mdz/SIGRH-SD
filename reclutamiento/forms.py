@@ -1,33 +1,41 @@
 from django import forms
-from .models import Candidato, Vacante
 
 
-# Permite registrar o editar los datos de una vacante
-class VacanteForm(forms.ModelForm):
-    # Define los campos editables y el espacio para describir el puesto
-    class Meta:
-        model = Vacante
-        fields = ["titulo", "descripcion", "estado"]
-        widgets = {"descripcion": forms.Textarea(attrs={"rows": 4})}
+class VacanteForm(forms.Form):
+    titulo = forms.CharField(max_length=150, label="Título")
+
+    descripcion = forms.CharField(
+        label="Descripción",
+        widget=forms.Textarea(attrs={"rows": 4})
+    )
+
+    estado = forms.ChoiceField(
+        choices=[("A", "Abierta"), ("C", "Cerrada")],
+        initial="A"
+    )
 
 
-# Recoge los datos del candidato y la vacante a la que postula
-class CandidatoForm(forms.ModelForm):
-    # Limita el registro a los datos personales y la vacante
-    class Meta:
-        model = Candidato
-        fields = ["nombre", "correo", "vacante"]
+class CandidatoForm(forms.Form):
+    nombre = forms.CharField(max_length=150)
+    correo = forms.EmailField()
+    vacante = forms.ChoiceField()
 
-    # Permite registrar postulaciones únicamente en vacantes abiertas
-    def __init__(self, *args, **kwargs):
+    # Recibe las vacantes disponibles desde la API.
+    def __init__(self, *args, vacantes=None, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields["vacante"].queryset = Vacante.objects.filter(estado="A")
-        self.fields["vacante"].help_text = "Selecciona una vacante abierta"
+
+        self.fields["vacante"].choices = [
+            (str(v["id"]), v["titulo"])
+            for v in (vacantes or [])
+            if v["estado"] == "A"
+        ]
 
 
-# Permite modificar únicamente el estado de la postulación
-class EstadoCandidatoForm(forms.ModelForm):
-    # Limita la edición al estado del candidato
-    class Meta:
-        model = Candidato
-        fields = ["estado"]
+class EstadoCandidatoForm(forms.Form):
+    estado = forms.ChoiceField(
+        choices=[
+            ("P", "Pendiente"),
+            ("A", "Aceptado"),
+            ("R", "Rechazado"),
+        ]
+    )

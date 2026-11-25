@@ -1,0 +1,24 @@
+services:
+  postgres_nomina:
+    image: postgres:17-alpine
+    restart: unless-stopped
+
+    environment:
+      POSTGRES_DB: ${NOM_DB_NAME}
+      POSTGRES_USER: ${NOM_DB_USER}
+      POSTGRES_PASSWORD: ${NOM_DB_PASSWORD}
+
+    ports:
+      - "127.0.0.1:55435:5432"
+
+    volumes:
+      - nomina_pgdata:/var/lib/postgresql/data
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  nomina_pgdata:

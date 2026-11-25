@@ -1,11 +1,9 @@
+from vacaciones.cliente_api import vacaciones_api, adaptar_solicitud, FalloAPI
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect, render
 from django.views.decorators.http import require_POST
-from vacaciones.models import Solicitud
-from vacaciones.services import resumen_dias
-
 
 # Inicia sesión con el identificador y la contraseña del empleado
 def login_usuario(request):
@@ -27,9 +25,41 @@ def login_usuario(request):
 # Muestra el saldo anual y las últimas solicitudes del usuario
 @login_required
 def dashboard(request):
+    saldo = {
+        "total": "—",
+        "usados": "—",
+        "pendientes": "—",
+        "disponibles": "No disponible",
+    }
+    solicitudes = []
+
+    try:
+        saldo = vacaciones_api(
+            "GET",
+            "saldo/",
+            parametros={"actor_id": request.user.pk},
+        )
+
+        respuesta = vacaciones_api(
+            "GET",
+            "solicitudes/",
+            parametros={"actor_id": request.user.pk},
+        )
+
+        solicitudes = [
+            adaptar_solicitud(item)
+            for item in respuesta["solicitudes"][:5]
+        ]
+
+    except (FalloAPI, ValueError, KeyError, TypeError):
+        messages.warning(
+            request,
+            "No fue posible consultar Vacaciones en este momento.",
+        )
+
     return render(request, "usuarios/dashboard.html", {
-        "saldo": resumen_dias(request.user),
-        "solicitudes": Solicitud.objects.filter(empleado=request.user)[:5],
+        "saldo": saldo,
+        "solicitudes": solicitudes,
     })
 
 

@@ -1,0 +1,23 @@
+services:
+  postgres_usuarios:
+    image: postgres:17-alpine
+
+    environment:
+      POSTGRES_DB: ${USU_DB_NAME}
+      POSTGRES_USER: ${USU_DB_USER}
+      POSTGRES_PASSWORD: ${USU_DB_PASSWORD}
+
+    ports:
+      - "127.0.0.1:55433:5432"
+
+    volumes:
+      - usuarios_pgdata:/var/lib/postgresql/data
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  usuarios_pgdata:

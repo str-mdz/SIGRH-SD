@@ -1,6 +1,11 @@
 from pathlib import Path
+from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Carga las variables de entorno del monolito.
+load_dotenv(BASE_DIR / ".env")
+
 SECRET_KEY = 'django-insecure-sigrh-desarrollo-local'
 DEBUG = True
 ALLOWED_HOSTS = ['localhost', '127.0.0.1']

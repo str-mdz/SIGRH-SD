@@ -1,22 +1,43 @@
 from django import forms
-from .models import Solicitud
+
+# Recibe las fechas sin guardar directamente en SQLite.
+class SolicitudForm(forms.Form):
+    fecha_inicio = forms.DateField(
+        label="Desde",
+        input_formats=["%Y-%m-%d"],
+        widget=forms.DateInput(
+            attrs={"type": "date"},
+            format="%Y-%m-%d"
+        )
+    )
+
+    fecha_fin = forms.DateField(
+        label="Hasta",
+        input_formats=["%Y-%m-%d"],
+        widget=forms.DateInput(
+            attrs={"type": "date"},
+            format="%Y-%m-%d"
+        )
+    )
+
+    motivo = forms.CharField(
+        required=False,
+        max_length=500,
+        label="Motivo (opcional)",
+        widget=forms.Textarea(attrs={"rows": 3})
+    )
 
 
-# Recoge las fechas y el motivo de una solicitud de vacaciones
-class SolicitudForm(forms.ModelForm):
-    # Define los campos y controles que usa el formulario de vacaciones
-    class Meta:
-        model = Solicitud
-        fields = ["fecha_inicio", "fecha_fin", "motivo"]
-        labels = {"fecha_inicio": "Desde", "fecha_fin": "Hasta", "motivo": "Motivo (opcional)"}
-        widgets = {
-            "fecha_inicio": forms.DateInput(attrs={"type": "date"}, format="%Y-%m-%d"),
-            "fecha_fin": forms.DateInput(attrs={"type": "date"}, format="%Y-%m-%d"),
-            "motivo": forms.Textarea(attrs={"rows": 3}),
-        }
-
-
-# Recoge la decisión del administrador y su comentario
+# Recibe la decisión de un administrador.
 class RevisionForm(forms.Form):
-    decision = forms.ChoiceField(choices=[("A", "Aprobar"), ("R", "Rechazar")], label="Decisión")
-    observaciones = forms.CharField(required=False, max_length=500, label="Comentario (opcional)", widget=forms.Textarea(attrs={"rows": 3}))
+    decision = forms.ChoiceField(
+        choices=[("A", "Aprobar"), ("R", "Rechazar")],
+        label="Decisión"
+    )
+
+    observaciones = forms.CharField(
+        required=False,
+        max_length=500,
+        label="Comentario (opcional)",
+        widget=forms.Textarea(attrs={"rows": 3})
+    )
