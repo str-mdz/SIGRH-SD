@@ -27,8 +27,7 @@ SECRET_KEY = 'django-insecure-j6om#(r!%=*tz54e6edd9g_d=yqm*w+@uz@3qr=z-=w(3-wxpd
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
-
+ALLOWED_HOSTS = ["reclutamiento", "127.0.0.1", "localhost"]
 
 # Application definition
 
@@ -78,13 +77,13 @@ WSGI_APPLICATION = 'config.wsgi.application'
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
 DATABASES = {
-    'default': {
+    "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": os.getenv("RECL_DB_NAME"),
-        "USER": os.getenv("RECL_DB_USER"),
-        "PASSWORD": os.getenv("RECL_DB_PASSWORD"),
-        "HOST": "127.0.0.1",
-        "PORT": "55432",
+        "NAME": os.environ["RECL_DB_NAME"],
+        "USER": os.environ["RECL_DB_USER"],
+        "PASSWORD": os.environ["RECL_DB_PASSWORD"],
+        "HOST": os.getenv("RECL_DB_HOST", "127.0.0.1"),
+        "PORT": os.getenv("RECL_DB_PORT", "55432"),
     }
 }
 

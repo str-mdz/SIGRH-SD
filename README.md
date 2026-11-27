@@ -1,26 +1,97 @@
-# SIGRH
+# SIGRH — Sistema Integral de Gestión de Recursos Humanos
 
-Sistema para gestionar vacaciones, hecho con Django y SQLite. Incluye inicio de sesión, registro de empleados, consulta de días disponibles, solicitudes de vacaciones y su aprobación, rechazo o cancelación.
+Proyecto final de Sistemas Distribuidos.
 
-## Cómo ejecutar
+## Descripción
 
-Necesitas Python 3.12 o superior. Abre PowerShell en la carpeta del proyecto.
+SIGRH administra cuatro áreas de Recursos Humanos:
 
-La primera vez, ejecuta:
+- Reclutamiento: vacantes y candidatos.
+- Usuarios: identidad y datos básicos de empleados.
+- Vacaciones: solicitudes, días disponibles y autorizaciones.
+- Nómina: cálculo e historial de nóminas.
+
+El proyecto parte de un monolito Django y separa sus
+responsabilidades en cuatro microservicios.
+
+## Arquitectura
+
+La aplicación utiliza:
+
+- Python y Django.
+- PostgreSQL, con una base independiente por servicio.
+- HTTP y JSON para comunicación entre servicios.
+- Docker Compose para la ejecución conjunta.
+- Nginx como punto de entrada HTTP.
+
+La interfaz original de SIGRH conserva temporalmente
+SQLite para sesiones y autenticación web.
+
+## Estructura
+
+- `SIGRH/`: configuración de la interfaz original.
+- `usuarios/`: interfaz web de usuarios.
+- `reclutamiento/`: interfaz de reclutamiento.
+- `vacaciones/`: interfaz de vacaciones.
+- `nomina/`: interfaz de nómina.
+- `servicios/`: cuatro microservicios Django.
+- `infra/nginx/`: configuración del gateway.
+- `scripts/`: herramientas de preparación.
+- `docs/`: documentación técnica.
+
+## Requisitos
+
+- Docker Desktop.
+- Docker Compose.
+- Python y las dependencias de `requirements.txt`.
+- Archivos `.env` configurados.
+
+## Preparación del entorno existente
+
+Los archivos `.env` contienen información privada
+y no se publican en GitHub.
+
+El procedimiento detallado se encuentra en:
+
+`docs/ARRANQUE_DOCKER.md`
+
+## Inicio del sistema
+
+Desde la raíz del proyecto:
 
 ```powershell
-python -m venv venv
-.\venv\Scripts\python.exe -m pip install -r requirements.txt
-.\venv\Scripts\python.exe manage.py migrate
-.\venv\Scripts\python.exe manage.py createsuperuser
+python scripts/preparar_compose.py
+docker compose config --quiet
+docker compose up --build -d
+docker compose ps
 ```
 
-Para iniciar el sistema:
+Entrada web:
 
-```powershell
-.\venv\Scripts\python.exe manage.py runserver
-```
+http://127.0.0.1:8080/
 
-Abre [http://127.0.0.1:8000/](http://127.0.0.1:8000/) e inicia sesión con el usuario y la contraseña que creaste. Desde **Administrar empleados** puedes agregar empleados.
+## Verificación
 
-Para detenerlo, presiona **Ctrl + C**.
+Consultar:
+
+- `/salud/usuarios`
+- `/salud/reclutamiento`
+- `/salud/vacaciones`
+- `/salud/nomina`
+
+## Operaciones principales
+
+1. Iniciar sesión.
+2. Administrar vacantes y candidatos.
+3. Consultar y solicitar vacaciones.
+4. Aprobar o rechazar solicitudes.
+5. Registrar nóminas con permisos administrativos.
+6. Consultar historiales autorizados.
+
+## Estado de implementación
+
+Los cuatro microservicios cuentan con APIs HTTP
+y bases PostgreSQL independientes.
+
+La autenticación web sigue dependiendo parcialmente
+del monolito.

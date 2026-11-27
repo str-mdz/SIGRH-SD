@@ -1,0 +1,200 @@
+name: sigrh-distribuido
+
+# Configuración compartida por los procesos Django
+x-django: &django
+  build:
+    context: .
+    dockerfile: Dockerfile
+  image: sigrh-demo:local
+  restart: unless-stopped
+
+# Configuración compartida por PostgreSQL
+x-postgres: &postgres
+  image: postgres:17-alpine
+  restart: unless-stopped
+  healthcheck:
+    test:
+      - CMD-SHELL
+      - pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB
+    interval: 5s
+    timeout: 3s
+    retries: 15
+
+services:
+
+  # BASES DE DATOS
+
+  postgres_reclutamiento:
+    <<: *postgres
+    env_file: ./servicios/reclutamiento_service/.env
+    ports:
+      - "127.0.0.1:55432:5432"
+    volumes:
+      - reclutamiento_pgdata:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: ${RECL_DB_NAME:?Falta_RECL_DB_NAME}
+      POSTGRES_USER: ${RECL_DB_USER:?Falta_RECL_DB_USER}
+      POSTGRES_PASSWORD: ${RECL_DB_PASSWORD:?Falta_RECL_DB_PASSWORD}
+
+  postgres_usuarios:
+    <<: *postgres
+    env_file: ./servicios/usuarios_service/.env
+    ports:
+      - "127.0.0.1:55433:5432"
+    volumes:
+      - usuarios_pgdata:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: ${USU_DB_NAME:?Falta_USU_DB_NAME}
+      POSTGRES_USER: ${USU_DB_USER:?Falta_USU_DB_USER}
+      POSTGRES_PASSWORD: ${USU_DB_PASSWORD:?Falta_USU_DB_PASSWORD}
+
+  postgres_vacaciones:
+    <<: *postgres
+    env_file: ./servicios/vacaciones_service/.env
+    ports:
+      - "127.0.0.1:55434:5432"
+    volumes:
+      - vacaciones_pgdata:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: ${VAC_DB_NAME:?Falta_VAC_DB_NAME}
+      POSTGRES_USER: ${VAC_DB_USER:?Falta_VAC_DB_USER}
+      POSTGRES_PASSWORD: ${VAC_DB_PASSWORD:?Falta_VAC_DB_PASSWORD}
+
+  postgres_nomina:
+    <<: *postgres
+    env_file: ./servicios/nomina_service/.env
+    ports:
+      - "127.0.0.1:55435:5432"
+    volumes:
+      - nomina_pgdata:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: ${NOM_DB_NAME:?Falta_NOM_DB_NAME}
+      POSTGRES_USER: ${NOM_DB_USER:?Falta_NOM_DB_USER}
+      POSTGRES_PASSWORD: ${NOM_DB_PASSWORD:?Falta_NOM_DB_PASSWORD}
+
+  # MICROSERVICIOS DJANGO
+
+  reclutamiento:
+    <<: *django
+    working_dir: /app/servicios/reclutamiento_service
+    env_file: ./servicios/reclutamiento_service/.env
+    environment:
+      RECL_DB_HOST: postgres_reclutamiento
+      RECL_DB_PORT: "5432"
+    command: >
+      sh -c "python manage.py migrate --noinput &&
+      exec python manage.py runserver 0.0.0.0:8001"
+    depends_on:
+      postgres_reclutamiento:
+        condition: service_healthy
+
+  usuarios:
+    <<: *django
+    working_dir: /app/servicios/usuarios_service
+    env_file: ./servicios/usuarios_service/.env
+    environment:
+      USU_DB_HOST: postgres_usuarios
+      USU_DB_PORT: "5432"
+    command: >
+      sh -c "python manage.py migrate --noinput &&
+      exec python manage.py runserver 0.0.0.0:8002"
+    depends_on:
+      postgres_usuarios:
+        condition: service_healthy
+
+  vacaciones:
+    <<: *django
+    working_dir: /app/servicios/vacaciones_service
+    env_file: ./servicios/vacaciones_service/.env
+    environment:
+      VAC_DB_HOST: postgres_vacaciones
+      VAC_DB_PORT: "5432"
+      USU_API_URL: http://usuarios:8002/api/
+    command: >
+      sh -c "python manage.py migrate --noinput &&
+      exec python manage.py runserver 0.0.0.0:8003"
+    depends_on:
+      postgres_vacaciones:
+        condition: service_healthy
+      usuarios:
+        condition: service_started
+
+  nomina:
+    <<: *django
+    working_dir: /app/servicios/nomina_service
+    env_file: ./servicios/nomina_service/.env
+    environment:
+      NOM_DB_HOST: postgres_nomina
+      NOM_DB_PORT: "5432"
+      USU_API_URL: http://usuarios:8002/api/
+    command: >
+      sh -c "python manage.py migrate --noinput &&
+      exec python manage.py runserver 0.0.0.0:8004"
+    depends_on:
+      postgres_nomina:
+        condition: service_healthy
+      usuarios:
+        condition: service_started
+
+  # INTERFAZ WEB ORIGINAL SIGRH
+
+  web:
+    <<: *django
+    working_dir: /app
+    env_file: ./.env
+    environment:
+      RECL_API_URL: http://reclutamiento:8001/api/
+      USU_API_URL: http://usuarios:8002/api/
+      VAC_API_URL: http://vacaciones:8003/api/
+      NOM_API_URL: http://nomina:8004/api/
+    volumes:
+      - type: bind
+        source: ./db.sqlite3
+        target: /app/db.sqlite3
+    command: >
+      sh -c "python manage.py migrate --noinput &&
+      exec python manage.py runserver 0.0.0.0:8000"
+    depends_on:
+      usuarios:
+        condition: service_started
+      reclutamiento:
+        condition: service_started
+      vacaciones:
+        condition: service_started
+      nomina:
+        condition: service_started
+
+  # API GATEWAY
+
+  gateway:
+    image: nginx:1.27-alpine
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8080:80"
+    volumes:
+      - type: bind
+        source: ./infra/nginx/default.conf
+        target: /etc/nginx/conf.d/default.conf
+        read_only: true
+    depends_on:
+      web:
+        condition: service_started
+
+# VOLÚMENES EXISTENTES
+
+volumes:
+  reclutamiento_pgdata:
+    external: true
+    name: reclutamiento_service_reclutamiento_pgdata
+
+  usuarios_pgdata:
+    external: true
+    name: usuarios_service_usuarios_pgdata
+
+  vacaciones_pgdata:
+    external: true
+    name: vacaciones_service_vacaciones_pgdata
+
+  nomina_pgdata:
+    external: true
+    name: nomina_service_nomina_pgdata

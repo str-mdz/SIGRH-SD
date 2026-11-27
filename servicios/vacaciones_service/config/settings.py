@@ -28,7 +28,7 @@ SECRET_KEY = os.environ["VAC_DJANGO_SECRET_KEY"]
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["vacaciones", "127.0.0.1", "localhost"]
 
 
 # Application definition
@@ -69,13 +69,15 @@ WSGI_APPLICATION = 'config.wsgi.application'
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": os.getenv("VAC_DB_NAME"),
-        "USER": os.getenv("VAC_DB_USER"),
-        "PASSWORD": os.getenv("VAC_DB_PASSWORD"),
-        "HOST": "127.0.0.1",
-        "PORT": "55434",
+        "NAME": os.environ["VAC_DB_NAME"],
+        "USER": os.environ["VAC_DB_USER"],
+        "PASSWORD": os.environ["VAC_DB_PASSWORD"],
+        "HOST": os.getenv("VAC_DB_HOST", "127.0.0.1"),
+        "PORT": os.getenv("VAC_DB_PORT", "55434"),
     }
 }
+
+
 
 # Password validation
 # https://docs.djangoproject.com/en/6.0/ref/settings/#auth-password-validators
