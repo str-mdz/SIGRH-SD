@@ -1,4 +1,5 @@
 from django.db import models
+import uuid
 
 # Create your models here.
 
@@ -54,3 +55,43 @@ class Solicitud(models.Model):
             f"{self.fecha_inicio} - "
             f"{self.get_estado_display()}"
         )
+
+
+class EventoSalida(models.Model):
+    # Patrón Transactional Outbox.
+
+    # Guarda eventos pendientes en PostgreSQL
+    # antes de publicarlos en RabbitMQ.
+
+    id = models.UUIDField(
+        primary_key=True,
+        default=uuid.uuid4,
+        editable=False,
+    )
+
+    tipo = models.CharField(max_length=80)
+
+    datos = models.JSONField()
+
+    publicado = models.BooleanField(
+        default=False,
+        db_index=True,
+    )
+
+    fecha_creacion = models.DateTimeField(
+        auto_now_add=True,
+    )
+
+    fecha_publicacion = models.DateTimeField(
+        null=True,
+        blank=True,
+    )
+
+    class Meta:
+        ordering = ["fecha_creacion"]
+        verbose_name = "Evento de salida"
+        verbose_name_plural = "Eventos de salida"
+
+    def __str__(self):
+        return f"{self.tipo} - {self.id}"
+

@@ -136,6 +136,58 @@ services:
       usuarios:
         condition: service_started
 
+  rabbitmq:
+    image: rabbitmq:4-management-alpine
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: sigrh
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:?Falta_RABBITMQ_PASSWORD}
+    ports:
+      - "127.0.0.1:15672:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+
+  publicador_vacaciones:
+    <<: *django
+    working_dir: /app/servicios/vacaciones_service
+    env_file: ./servicios/vacaciones_service/.env
+    environment:
+      VAC_DB_HOST: postgres_vacaciones
+      VAC_DB_PORT: "5432"
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_USER: sigrh
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:?Falta_RABBITMQ_PASSWORD}
+    command: python -m vacaciones.publicador
+    depends_on:
+      postgres_vacaciones:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+
+  consumidor_nomina:
+    <<: *django
+    working_dir: /app/servicios/nomina_service
+    env_file: ./servicios/nomina_service/.env
+    environment:
+      NOM_DB_HOST: postgres_nomina
+      NOM_DB_PORT: "5432"
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_USER: sigrh
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:?Falta_RABBITMQ_PASSWORD}
+    command: python -m nomina.consumidor
+    depends_on:
+      postgres_nomina:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+
   # INTERFAZ WEB ORIGINAL SIGRH
 
   web:
@@ -198,3 +250,5 @@ volumes:
   nomina_pgdata:
     external: true
     name: nomina_service_nomina_pgdata
+  
+  rabbitmq_data:

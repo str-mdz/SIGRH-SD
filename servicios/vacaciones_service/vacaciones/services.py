@@ -5,7 +5,7 @@ from django.db import connection, transaction
 from django.db.models import Sum
 from django.utils import timezone
 
-from .models import Solicitud
+from .models import Solicitud, EventoSalida
 
 
 # Cuenta lunes a viernes, incluyendo ambas fechas.
@@ -121,20 +121,59 @@ def cancelar_solicitud(solicitud_id, empleado_id):
 
 
 # Registra una sola decisión sobre una solicitud pendiente.
+
+@transaction.atomic
 def revisar_solicitud(
     solicitud_id,
     revisor_id,
     decision,
     observaciones=""
 ):
-    return Solicitud.objects.filter(
-        pk=solicitud_id,
-        estado="P"
-    ).exclude(
-        empleado_id=revisor_id
-    ).update(
-        estado=decision,
-        revisor_id=revisor_id,
-        observaciones=observaciones,
-        fecha_respuesta=timezone.now()
+    # Bloquea la fila durante la revisión.
+    solicitud = (
+        Solicitud.objects
+        .select_for_update()
+        .filter(
+            pk=solicitud_id,
+            estado="P",
+        )
+        .exclude(empleado_id=revisor_id)
+        .first()
     )
+
+    if solicitud is None:
+        return 0
+
+    # Guarda la decisión en Vacaciones.
+    solicitud.estado = decision
+    solicitud.revisor_id = revisor_id
+    solicitud.observaciones = observaciones
+    solicitud.fecha_respuesta = timezone.now()
+
+    solicitud.save(update_fields=[
+        "estado",
+        "revisor_id",
+        "observaciones",
+        "fecha_respuesta",
+    ])
+
+    # Solo las solicitudes aprobadas producen
+    # un evento dirigido a Nómina.
+    if decision == "A":
+        EventoSalida.objects.create(
+            tipo="vacaciones.aprobadas",
+            datos={
+                "solicitud_id": solicitud.id,
+                "empleado_id": solicitud.empleado_id,
+                "dias": solicitud.dias,
+                "fecha_inicio": (
+                    solicitud.fecha_inicio.isoformat()
+                ),
+                "fecha_fin": (
+                    solicitud.fecha_fin.isoformat()
+                ),
+            },
+        )
+
+    return 1
+

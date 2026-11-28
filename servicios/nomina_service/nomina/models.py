@@ -94,3 +94,35 @@ class Nomina(models.Model):
             )
 
         super().save(*args, **kwargs)
+
+
+class VacacionAprobada(models.Model):
+    # Impide registrar dos veces el mismo evento.
+    evento_id = models.UUIDField(
+        primary_key=True,
+        editable=False,
+    )
+
+    solicitud_id = models.PositiveBigIntegerField()
+
+    empleado_id = models.PositiveBigIntegerField(
+        db_index=True,
+    )
+
+    dias = models.PositiveSmallIntegerField()
+
+    fecha_inicio = models.DateField()
+    fecha_fin = models.DateField()
+
+    fecha_recepcion = models.DateTimeField(
+        auto_now_add=True,
+    )
+
+    class Meta:
+        ordering = ["-fecha_recepcion"]
+
+    def __str__(self):
+        return (
+            f"Empleado {self.empleado_id} - "
+            f"{self.dias} días aprobados"
+        )
