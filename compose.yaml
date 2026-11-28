@@ -102,6 +102,22 @@ services:
       postgres_usuarios:
         condition: service_healthy
 
+
+  # Segunda instancia para balanceo de carga
+  usuarios_replica:
+    <<: *django
+    working_dir: /app/servicios/usuarios_service
+    env_file: ./servicios/usuarios_service/.env
+    environment:
+      USU_DB_HOST: postgres_usuarios
+      USU_DB_PORT: "5432"
+    command: python manage.py runserver 0.0.0.0:8002
+    depends_on:
+      postgres_usuarios:
+        condition: service_healthy
+      usuarios:
+        condition: service_started
+
   vacaciones:
     <<: *django
     working_dir: /app/servicios/vacaciones_service
@@ -231,6 +247,9 @@ services:
     depends_on:
       web:
         condition: service_started
+      usuarios_replica:
+        condition: service_started
+
 
 # VOLÚMENES EXISTENTES
 
