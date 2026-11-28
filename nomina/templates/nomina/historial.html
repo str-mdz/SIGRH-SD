@@ -1,17 +1,90 @@
+
 {% extends 'base.html' %}
+
 {% block title %}Nómina | SIGRH{% endblock %}
 {% block heading %}Nómina{% endblock %}
+
 {% block content %}
-{% if user.is_staff %}<div class="actions"><a class="button" href="{% url 'nomina:registrar' %}">Registrar nómina</a></div>{% endif %}
+
+{% if user.is_staff %}
+<div class="actions">
+    <a class="button" href="{% url 'nomina:registrar' %}">
+        Registrar nómina
+    </a>
+</div>
+{% endif %}
+
 <section class="panel">
-    <h2>{% if user.is_staff %}Historial de nóminas{% else %}Mis nóminas{% endif %}</h2>
-    <div class="table-wrap"><table>
-        <thead><tr><th>Empleado</th><th>Periodo</th><th>Sueldo base</th><th>Bono</th><th>Descuento</th><th>Total</th></tr></thead>
-        <tbody>{% for nomina in nominas %}<tr>
-            <td>{{ nomina.empleado }} ({{ nomina.empleado.username }})</td><td>{{ nomina.periodo }}</td>
-            <td>{{ nomina.sueldo_base|floatformat:2 }}</td><td>{{ nomina.bono|floatformat:2 }}</td>
-            <td>{{ nomina.descuento|floatformat:2 }}</td><td><strong>{{ nomina.total|floatformat:2 }}</strong></td>
-        </tr>{% empty %}<tr><td colspan="6" class="empty">No hay nóminas registradas.</td></tr>{% endfor %}</tbody>
-    </table></div>
+    <h2>
+        {% if user.is_staff %}
+            Historial de nóminas
+        {% else %}
+            Mis nóminas
+        {% endif %}
+    </h2>
+
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Empleado</th>
+                    <th>Periodo</th>
+                    <th>Sueldo base</th>
+                    <th>Bono</th>
+                    <th>Descuento</th>
+                    <th>Total</th>
+                    <th>Recibo</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for nomina in nominas %}
+                <tr>
+                    <td>
+                        {{ nomina.empleado }}
+                        ({{ nomina.empleado.username }})
+                    </td>
+
+                    <td>{{ nomina.periodo }}</td>
+
+                    <td>
+                        {{ nomina.sueldo_base|floatformat:2 }}
+                    </td>
+
+                    <td>
+                        {{ nomina.bono|floatformat:2 }}
+                    </td>
+
+                    <td>
+                        {{ nomina.descuento|floatformat:2 }}
+                    </td>
+
+                    <td>
+                        <strong>
+                            {{ nomina.total|floatformat:2 }}
+                        </strong>
+                    </td>
+
+                    <td>
+                        <a
+                            class="button"
+                            href="{% url 'nomina:recibo' nomina.id %}"
+                        >
+                            Descargar PDF
+                        </a>
+                    </td>
+                </tr>
+
+                {% empty %}
+                <tr>
+                    <td colspan="7" class="empty">
+                        No hay nóminas registradas.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 </section>
+
 {% endblock %}
