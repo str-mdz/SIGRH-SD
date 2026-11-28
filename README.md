@@ -14,18 +14,125 @@ SIGRH administra cuatro áreas de Recursos Humanos:
 El proyecto parte de un monolito Django y separa sus
 responsabilidades en cuatro microservicios.
 
+
+## Instalación desde cero
+
+### Requisitos
+
+- Docker Desktop con motor Linux funcionando.
+- Docker Compose.
+- Python 3.12 o superior.
+- Puertos 8080 y 15672 disponibles.
+
+### 1. Clonar el proyecto
+
+```powershell
+git clone -b distribucion https://github.com/str-mdz/SIGRH-SD.git
+cd SIGRH-SD
+```
+
+### 2. Preparar el entorno
+
+```powershell
+python scripts/inicializar_entorno.py
+```
+
+El script genera los archivos privados de configuración,
+crea SQLite si falta y prepara los volúmenes de PostgreSQL.
+
+
+### 3. Levantar SIGRH
+
+```powershell
+docker compose config --quiet
+docker compose up --build -d
+docker compose ps
+```
+
+### 4. Crear los usuarios administradores iniciales
+
+La interfaz web y Usuarios utilizan
+almacenamientos de identidad separados.
+
+Crear primero un administrador para la interfaz:
+
+```powershell
+docker compose exec web python manage.py createsuperuser
+```
+
+Crear después un administrador en Usuarios:
+
+```powershell
+docker compose exec usuarios python manage.py createsuperuser
+```
+
+Para una instalación nueva, utilizar el mismo identificador
+y crear ambos como primeros usuarios.
+
+### 5. Verificar la instalación
+
+```powershell
+python scripts/verificar_sigrh.py
+```
+
+### 6. Abrir el sistema
+
+Interfaz SIGRH:
+http://127.0.0.1:8080/
+
+RabbitMQ Management:
+http://127.0.0.1:15672/
+
+El usuario de RabbitMQ es `sigrh`.
+Su contraseña se genera en el archivo .env de la raíz.
+
+### Apagar el sistema
+
+```powershell
+docker compose down
+```
+
+No usar `down -v`.
+
 ## Arquitectura
 
-La aplicación utiliza:
+SIGRH utiliza cuatro microservicios Django:
 
-- Python y Django.
-- PostgreSQL, con una base independiente por servicio.
-- HTTP y JSON para comunicación entre servicios.
-- Docker Compose para la ejecución conjunta.
-- Nginx como punto de entrada HTTP.
+- Usuarios
+- Reclutamiento
+- Vacaciones
+- Nómina
 
-La interfaz original de SIGRH conserva temporalmente
-SQLite para sesiones y autenticación web.
+Cada servicio administra su base PostgreSQL.
+
+Nginx actúa como gateway y distribuye solicitudes
+entre dos instancias del servicio Usuarios.
+
+Docker Compose proporciona una red interna y DNS.
+
+RabbitMQ permite comunicar Vacaciones con Nómina
+mediante eventos asíncronos, Transactional Outbox,
+reintentos, DLQ e idempotencia básica.
+
+## Limitaciones
+
+La autenticación web utiliza SQLite.
+
+La creación de empleados no se sincroniza
+automáticamente entre SQLite y Usuarios.
+
+El balanceo se ha demostrado en las rutas de Usuarios
+publicadas por Nginx, no en todas las llamadas internas.
+
+Esta es una implementación académica para desarrollo local.
+No debe exponerse a Internet sin reforzar su seguridad.
+
+## Documentación
+
+- docs/ARRANQUE_DOCKER.md
+- docs/DECISIONES_ARQUITECTURA.md
+- docs/reporte-final.pdf
+
 
 ## Estructura
 
@@ -71,8 +178,6 @@ Entrada web:
 http://127.0.0.1:8080/
 
 ## Verificación
-
-Consultar:
 
 - `/salud/usuarios`
 - `/salud/reclutamiento`

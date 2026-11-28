@@ -11,3 +11,10 @@ staticfiles/
 .pytest_cache/
 .vscode/
 .idea/
+
+# Respaldos locales
+*.bak
+
+# Archivos de entorno privados
+.env
+**/.env

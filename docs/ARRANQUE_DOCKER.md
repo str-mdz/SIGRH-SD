@@ -133,3 +133,51 @@ volúmenes administrados por Compose.
 
 Los volúmenes PostgreSQL actuales son externos
 y deben conservarse.
+
+
+## Instalación limpia
+
+La instalación no requiere que los volúmenes
+PostgreSQL existan previamente.
+
+El comando:
+
+```powershell
+python scripts/inicializar_entorno.py
+```
+
+prepara:
+
+1. El .env de la interfaz web.
+2. Los cuatro .env de los microservicios.
+3. El archivo SQLite inicial, si no existe.
+4. Los cuatro volúmenes PostgreSQL.
+
+No elimina ni sustituye recursos existentes.
+
+Después:
+
+```powershell
+docker compose up --build -d
+```
+
+inicia las bases de datos, ejecuta migraciones
+y levanta los servicios.
+
+Para utilizar funciones administrativas, crear
+los administradores iniciales según el README.
+
+### Limitación conocida
+
+Los usuarios web y los usuarios del microservicio
+Usuarios todavía no se sincronizan automáticamente.
+
+Por ello, una instalación nueva debe mantener
+consistentes los identificadores de las cuentas
+que participen en operaciones entre servicios.
+
+Para demostraciones con empleados adicionales,
+hay que registrar las cuentas correspondientes
+en ambos almacenes antes de probar Vacaciones
+y Nómina.
+
